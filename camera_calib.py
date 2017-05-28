@@ -10,36 +10,40 @@ class camera_calib():
         self.nx = nx
         self.ny = ny
         self.image_files = image_files
+        self.cameraMatrix = None
+
 
     def calibrate(self):
-        # object points for a single image
-        objp = np.zeros((self.nx * self.ny, 3), np.float32)
-        objp[:, :2] = np.mgrid[0:nx, 0:ny].T.reshape(-1, 2)
 
-        # object points for all images
-        object_points = []
-        # image points for all images
-        img_points = []  # np.array(dtype=np.float32)
+        if self.cameraMatrix is None:
+            # object points for a single image
+            objp = np.zeros((self.nx * self.ny, 3), np.float32)
+            objp[:, :2] = np.mgrid[0:self.nx, 0:self.ny].T.reshape(-1, 2)
 
-        for fname in self.image_files:
+            # object points for all images
+            object_points = []
+            # image points for all images
+            img_points = []  # np.array(dtype=np.float32)
 
-            img = cv2.imread(fname)
-            # plt.imshow(img)
-            print(img.shape)
+            for fname in self.image_files:
 
-            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                img = mpimg.imread(fname)
+                # plt.imshow(img)
+                print(img.shape)
 
-            # Find the chessboard corners
-            ret, corners = cv2.findChessboardCorners(gray, (nx, ny), None)
+                gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
 
-            if ret == True:
-                object_points.append(objp)
-                img_points.append(corners)
-                # print (object_points)
+                # Find the chessboard corners
+                ret, corners = cv2.findChessboardCorners(gray, (self.nx, self.ny), None)
 
-        img = cv2.imread(self.image_files[0])
-        retval, self.cameraMatrix, self.distCoeffs, rvecs, tvecs = cv2.calibrateCamera(object_points, img_points, img.shape[0:2],
-                                                                             None, None)
+                if ret == True:
+                    object_points.append(objp)
+                    img_points.append(corners)
+                    # print (object_points)
+
+            img = cv2.imread(self.image_files[0])
+            retval, self.cameraMatrix, self.distCoeffs, rvecs, tvecs = cv2.calibrateCamera(object_points, img_points, img.shape[0:2],
+                                                                                 None, None)
 
     def undistort(self, img, plot = False):
         undist = cv2.undistort(img, self.cameraMatrix, self.distCoeffs, None, self.cameraMatrix)
@@ -54,6 +58,8 @@ class camera_calib():
 
             plt.show()
 
+        return undist
+
 
     # Define a function that takes an image, number of x and y points,
     # camera matrix and distortion coefficients
@@ -61,7 +67,7 @@ class camera_calib():
         # Use the OpenCV undistort() function to remove distortion
         undist = cv2.undistort(img, mtx, dist, None, mtx)
         # Convert undistorted image to grayscale
-        gray = cv2.cvtColor(undist, cv2.COLOR_BGR2GRAY)
+        gray = cv2.cvtColor(undist, cv2.COLOR_RGB2GRAY)
         # Search for corners in the grayscaled image
         ret, corners = cv2.findChessboardCorners(gray, (nx, ny), None)
 
@@ -91,20 +97,23 @@ class camera_calib():
         # Return the resulting image and matrix
         return warped, M
 
-
-if __name__ == '__main__':
-
-
+def get_camera_calib():
     # prepare object points
     nx = 9
     ny = 6
 
     images = glob.glob('camera_cal/calibration*.jpg')
 
+    cam_calib = camera_calib(nx, ny, images)
+    cam_calib.calibrate()
 
-    camera_calib = camera_calib(nx, ny, images)
-    camera_calib.calibrate()
+    return cam_calib
 
-    img = cv2.imread('camera_cal/calibration2.jpg')
-    camera_calib.undistort(img, plot=True)
+
+if __name__ == '__main__':
+
+    cam_calib = get_camera_calib()
+
+    img = mpimg.imread('camera_cal/calibration2.jpg')
+    cam_calib.undistort(img, plot=True)
 

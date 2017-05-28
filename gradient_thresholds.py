@@ -57,55 +57,55 @@ def hls_threshold(image, channel='S', thresh=(0,255)):
     binary[(single_channel > thresh[0]) & (single_channel <= thresh[1])] = 1
     return binary
 
-if __name__ == '__main__':
 
+def apply_all_thresholds(image, plot = False):
     # Choose a Sobel kernel size
-    ksize = 5 # Choose a larger odd number to smooth gradient measurements
-
-    image = mpimg.imread('test_images/test2.jpg')
+    ksize = 5  # Choose a larger odd number to smooth gradient measurements
     # Apply each of the thresholding functions
     gradx = abs_sobel_thresh(image, orient='x', sobel_kernel=ksize, thresh=(200, 3000))
     grady = abs_sobel_thresh(image, orient='y', sobel_kernel=ksize, thresh=(100, 3000))
-    #grady = np.zeros_like(grady)
+    # grady = np.zeros_like(grady)
     mag_binary = mag_thresh(image, sobel_kernel=ksize, mag_thresh=(300, 1000))
     dir_binary = dir_threshold(image, sobel_kernel=ksize, thresh=(np.pi * 0.15, np.pi * 0.30))
     dir_binary[dir_threshold(image, sobel_kernel=ksize, thresh=(np.pi * 0.65, np.pi * 0.85)) == 1] = 1
     dir_binary[dir_threshold(image, sobel_kernel=ksize, thresh=(-np.pi * 0.85, -np.pi * 0.65)) == 1] = 1
     dir_binary[dir_threshold(image, sobel_kernel=ksize, thresh=(-np.pi * 0.30, -np.pi * 0.15)) == 1] = 1
-
     s_binary = hls_threshold(image, 'S', thresh=(90, 255))
-
     combined = np.zeros_like(dir_binary)
-    combined[((gradx == 1) & (grady == 1)) | ((mag_binary == 1) & (dir_binary == 1)) | (s_binary==1)] = 1
-
+    combined[((gradx == 1) & (grady == 1)) | ((mag_binary == 1) & (dir_binary == 1)) | (s_binary == 1)] = 1
     combined_grad = np.zeros_like(dir_binary)
     combined_grad[((gradx == 1) & (grady == 1))] = 1
-
     combined_mag = np.zeros_like(dir_binary)
     combined_mag[((mag_binary == 1) & (dir_binary == 1))] = 1
 
-    f, subplots = plt.subplots(3, 3, figsize=(24, 9))
-    f.tight_layout()
-    subplots[0,0].imshow(image)
-    subplots[0,0].set_title('Original Image', fontsize=10)
-    subplots[1,0].imshow(combined, cmap='gray')
-    subplots[1,0].set_title('All Combined Thresholds', fontsize=10)
+    if plot == True:
+        f, subplots = plt.subplots(3, 3, figsize=(24, 9))
+        f.tight_layout()
+        subplots[0, 0].imshow(image)
+        subplots[0, 0].set_title('Original Image', fontsize=10)
+        subplots[1, 0].imshow(combined, cmap='gray')
+        subplots[1, 0].set_title('All Combined Thresholds', fontsize=10)
+        subplots[2, 0].imshow(s_binary, cmap='gray')
+        subplots[2, 0].set_title('Threshold S channel', fontsize=10)
+        subplots[0, 2].imshow(gradx, cmap='gray')
+        subplots[0, 2].set_title('Thresholded X Gradient', fontsize=10)
+        subplots[1, 2].imshow(grady, cmap='gray')
+        subplots[1, 2].set_title('Thresholded Y Gradient', fontsize=10)
+        subplots[2, 2].imshow(combined_grad, cmap='gray')
+        subplots[2, 2].set_title('Combined X and Y Gradient', fontsize=10)
+        subplots[0, 1].imshow(mag_binary, cmap='gray')
+        subplots[0, 1].set_title('Thresholded Gradient Magnitude', fontsize=10)
+        subplots[1, 1].imshow(dir_binary, cmap='gray')
+        subplots[1, 1].set_title('Thresholded Gradient Direction', fontsize=10)
+        subplots[2, 1].imshow(combined_mag, cmap='gray')
+        subplots[2, 1].set_title('Combined Magnitude and Angle', fontsize=10)
+        plt.subplots_adjust(left=0., right=1, top=0.9, bottom=0.)
+        plt.show()
 
-    subplots[2,0].imshow(s_binary, cmap='gray')
-    subplots[2,0].set_title('Threshold S channel', fontsize=10)
-    subplots[0,2].imshow(gradx, cmap='gray')
-    subplots[0,2].set_title('Thresholded X Gradient', fontsize=10)
-    subplots[1,2].imshow(grady, cmap='gray')
-    subplots[1,2].set_title('Thresholded Y Gradient', fontsize=10)
-    subplots[2,2].imshow(combined_grad, cmap='gray')
-    subplots[2,2].set_title('Combined X and Y Gradient', fontsize=10)
+    return combined
 
-    subplots[0,1].imshow(mag_binary, cmap='gray')
-    subplots[0,1].set_title('Thresholded Gradient Magnitude', fontsize=10)
-    subplots[1,1].imshow(dir_binary, cmap='gray')
-    subplots[1,1].set_title('Thresholded Gradient Direction', fontsize=10)
-    subplots[2,1].imshow(combined_mag, cmap='gray')
-    subplots[2,1].set_title('Combined Magnitude and Angle', fontsize=10)
+if __name__ == '__main__':
 
-    plt.subplots_adjust(left=0., right=1, top=0.9, bottom=0.)
-    plt.show()
+    image = mpimg.imread('test_images/test2.jpg')
+
+    thresholded = apply_all_thresholds(image, True)
