@@ -58,7 +58,7 @@ class camera_calib():
             ax2.set_title('Undistorted Image', fontsize=50)
             plt.subplots_adjust(left=0., right=1, top=0.9, bottom=0.)
 
-            plt.savefig('output_images/calib.png')
+            plt.savefig('output_images/calib_road.jpg')
             plt.show()
 
         return undist
@@ -117,6 +117,6 @@ if __name__ == '__main__':
 
     cam_calib = get_camera_calib()
 
-    img = mpimg.imread('camera_cal/calibration2.jpg')
+    img = mpimg.imread('input_images/1.jpg')
     cam_calib.undistort(img, plot=True)
 

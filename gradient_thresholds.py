@@ -105,8 +105,8 @@ def apply_all_thresholds(image, plot = False):
         subplots[0, 0].set_title('Original Image', fontsize=10)
         subplots[1, 0].imshow(combined, cmap='gray')
         subplots[1, 0].set_title('All Combined Thresholds', fontsize=10)
-        subplots[2, 0].imshow(s_binary, cmap='gray')
-        subplots[2, 0].set_title('Threshold S channel', fontsize=10)
+        subplots[2, 1].imshow(s_binary, cmap='gray')
+        subplots[2, 1].set_title('Threshold S channel', fontsize=10)
         subplots[0, 2].imshow(gradx, cmap='gray')
         subplots[0, 2].set_title('Thresholded X Gradient', fontsize=10)
         subplots[1, 2].imshow(grady, cmap='gray')
@@ -117,15 +117,15 @@ def apply_all_thresholds(image, plot = False):
         subplots[0, 1].set_title('Thresholded Gradient Magnitude', fontsize=10)
         subplots[1, 1].imshow(r_binary, cmap='gray')
         subplots[1, 1].set_title('Thresholded R channel', fontsize=10)
-        subplots[2, 1].imshow(combined_mag, cmap='gray')
-        subplots[2, 1].set_title('Combined Magnitude and Angle', fontsize=10)
+
         plt.subplots_adjust(left=0., right=1, top=0.9, bottom=0.)
+        plt.savefig('output_images/thresholds.jpg')
         plt.show()
 
     return combined
 
 if __name__ == '__main__':
 
-    image = mpimg.imread('input_images/1036.jpg')
+    image = mpimg.imread('input_images/1.jpg')
 
     thresholded = apply_all_thresholds(image, True)

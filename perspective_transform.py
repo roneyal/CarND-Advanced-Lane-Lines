@@ -26,7 +26,7 @@ class perspective_transform():
 if __name__ == '__main__':
 
 
-    img = mpimg.imread('input_images/22.jpg')
+    img = mpimg.imread('test_images/test2.jpg')
 
     perspective_transform = perspective_transform()
 
@@ -36,5 +36,10 @@ if __name__ == '__main__':
     f.tight_layout()
 
     subplots[0].imshow(warped)
+    subplots[0].set_title('Warped image', fontsize=16)
+
     subplots[1].imshow(img)
+    subplots[1].set_title('Original image', fontsize=16)
+
+    plt.savefig('output_images/transformed.jpg')
     plt.show()

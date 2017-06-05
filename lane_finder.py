@@ -25,8 +25,6 @@ class video_flow():
         thresh = gradient_thresholds.apply_all_thresholds(undist, plot=False)
         warper = perspective_transform.perspective_transform()
         warped = warper.warp(thresh)
-        # plt.imshow(img)
-        # plt.figure()
 
         window = sliding_window.sliding_window()
         if self.high_conf == False:

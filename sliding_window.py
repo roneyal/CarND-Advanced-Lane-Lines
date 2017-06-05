@@ -131,11 +131,16 @@ class sliding_window():
             cv2.fillPoly(window_img, np.int_([right_line_pts]), (0, 255, 0))
             result = cv2.addWeighted(out_img, 1, window_img, 0.3, 0)
 
-            plt.imshow(result)
+            plt.imshow(binary_warped)
             plt.plot(left_fitx, ploty, color='yellow')
             plt.plot(right_fitx, ploty, color='yellow')
             plt.xlim(0, 1280)
             plt.ylim(720, 0)
+            title = 'Left: %fx^2 + %fx +%f\nRight: %fx^2 + %fx +%f' % (left_fit[0], left_fit[1], left_fit[2], right_fit[0], right_fit[1], right_fit[2])
+            plt.title(title)
+            plt.savefig('output_images/poly.jpg')
+            plt.show()
+
 
         return left_fit, right_fit
 

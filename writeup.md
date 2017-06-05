@@ -20,12 +20,12 @@ The goals / steps of this project are the following:
 [//]: # (Image References)
 
 [image1]: ./output_images/calib.png "Undistorted"
-[image2]: ./test_images/test1.jpg "Road Transformed"
-[image3]: ./examples/binary_combo_example.jpg "Binary Example"
-[image4]: ./examples/warped_straight_lines.jpg "Warp Example"
-[image5]: ./examples/color_fit_lines.jpg "Fit Visual"
-[image6]: ./examples/example_output.jpg "Output"
-[video1]: ./project_video.mp4 "Video"
+[image2]: ./output_images/calib_road.jpg "Undistorted road image"
+[image3]: ./output_images/thresholds.jpg "Thresholds"
+[image4]: ./output_images/transformed.jpg "Warp Example"
+[image5]: ./output_images/poly.jpg "polynomial fit"
+[image6]: ./output_images/lane.jpg "Output"
+[video1]: ./out.mp4 "Video"
 
 ## [Rubric](https://review.udacity.com/#!/rubrics/571/view) Points
 
@@ -53,61 +53,60 @@ The camera matrix and distortion coefficients are saved and used for undistortin
 
 ### Pipeline (single images)
 
+The pipeline for a single image is implemented in high level in lane_finder.py in handle_image method (line 21).
+
+
 #### 1. Provide an example of a distortion-corrected image.
 
-To demonstrate this step, I will describe how I apply the distortion correction to one of the test images like this one:
+The first step in the pipeline is applying the undistort method on the test image. Here is an example of before and after distortion correction on a test image:
 ![alt text][image2]
 
 #### 2. Describe how (and identify where in your code) you used color transforms, gradients or other methods to create a thresholded binary image.  Provide an example of a binary image result.
 
-I used a combination of color and gradient thresholds to generate a binary image (thresholding steps at lines # through # in `another_file.py`).  Here's an example of my output for this step.  (note: this is not actually from one of the test images)
+The next step is applying color transforms, gradients and thresholds to convert the image to a binary thresholded image.
+This is done in gradient_thresholds.py. To tune the different thresholds I plotted them all together, along with the original image and a combined filter (both seen on the left side of the plot).
+After some exploration I got the best results by combining an X axis gradient filter, Y axis gradient filter, gradient magnitude filter, R channel filter and S channel filter (lines 73 - 100 in gradient_thresholds.py).
+An example plot can be seen below:
 
 ![alt text][image3]
 
 #### 3. Describe how (and identify where in your code) you performed a perspective transform and provide an example of a transformed image.
 
-The code for my perspective transform includes a function called `warper()`, which appears in lines 1 through 8 in the file `example.py` (output_images/examples/example.py) (or, for example, in the 3rd code cell of the IPython notebook).  The `warper()` function takes as inputs an image (`img`), as well as source (`src`) and destination (`dst`) points.  I chose the hardcode the source and destination points in the following manner:
+The image perspective transform is done in perspective_transform.py. 
+I identified the following points as the source:
+[220, 720], [590, 450], [690, 450], [1060, 720]
+And the following for the destination:
+[300, 720], [300, 0], [950, 0], [950, 720]
 
-```python
-src = np.float32(
-    [[(img_size[0] / 2) - 55, img_size[1] / 2 + 100],
-    [((img_size[0] / 6) - 10), img_size[1]],
-    [(img_size[0] * 5 / 6) + 60, img_size[1]],
-    [(img_size[0] / 2 + 55), img_size[1] / 2 + 100]])
-dst = np.float32(
-    [[(img_size[0] / 4), 0],
-    [(img_size[0] / 4), img_size[1]],
-    [(img_size[0] * 3 / 4), img_size[1]],
-    [(img_size[0] * 3 / 4), 0]])
-```
-
-This resulted in the following source and destination points:
-
-| Source        | Destination   | 
-|:-------------:|:-------------:| 
-| 585, 460      | 320, 0        | 
-| 203, 720      | 320, 720      |
-| 1127, 720     | 960, 720      |
-| 695, 460      | 960, 0        |
-
-I verified that my perspective transform was working as expected by drawing the `src` and `dst` points onto a test image and its warped counterpart to verify that the lines appear parallel in the warped image.
+An example transformation can be seen in the next image:
 
 ![alt text][image4]
 
 #### 4. Describe how (and identify where in your code) you identified lane-line pixels and fit their positions with a polynomial?
 
-Then I did some other stuff and fit my lane lines with a 2nd order polynomial kinda like this:
+I used the sliding window approach to find the lane lines in the transformed image. The initial lane is found by the method find_initial_lanes in sliding_window.py (line 12).
+When there is a high confidence detection, the search for the next lane is done only in a window around the previous finding. This is done in the method find_next_line in sliding_window.py (line 83).
+The lit pixels in each window are then used to fit a polynomial for each lane (lines 72 - 79 and 99 - 105 in sliding_window.py).
+Here is a nice example of the fitted polynomials on the warped image:
 
 ![alt text][image5]
 
+To determine if a fit on an image is a high confidence match or not, I used a basic heuristic based on a-priori knowledge of the lane shape. A high confidence detection was defined as one where  the lane lines are not too close (less than 315 cm on average) and not too far away (more than 400 cm on average), with a small standard deviation in the lane distances (less than 50cm) and where the car is identified to be close to the center (up to 50cm). In case the finding is not a "high confidence" detection, the next image is processed like the first image - the search for the lane lines is done on the whole width. See line 52 in lane_finder.py.
+
+In addition, to smooth the noise between images, I used an alpha filter for the detections - high confidence detections were averaged with the previous findings with an alpha value of 0.1 and low confidence detections did not change the running average at all (alpha value of 0) - see lines 56-57 in lane_finder.py.
+	  
 #### 5. Describe how (and identify where in your code) you calculated the radius of curvature of the lane and the position of the vehicle with respect to center.
 
-I did this in lines # through # in my code in `my_other_file.py`
+The curvature radius is calculated in the method calc_radius in lane_finder.py.
+I found it best to average both polynomials (right and left lane) and then to find the radius (instead of averaging two radius values). See line 105 - 127 in lane_finder.py.
+The vehicle distance from center is calculated by the location of the lanes at the bottom of the image and the distance of each lane from the center pixel.
+The distance in pixels is multiplied by 3.7/7 to get the distance in cm, and this is the value that is displayed on the output image. See lines 62-63 in lane_finder.py.
+
 
 #### 6. Provide an example image of your result plotted back down onto the road such that the lane area is identified clearly.
 
-I implemented this step in lines # through # in my code in `yet_another_file.py` in the function `map_lane()`.  Here is an example of my result on a test image:
-
+Here is a nice example of the lane drawn on the road. Since the car is slightly towards the left side of the lane, the distance from center is negative.
+This was plotted using lines 68-79 in lane_finder.py.
 ![alt text][image6]
 
 ---
@@ -124,4 +123,8 @@ Here's a [link to my video result](./project_video.mp4)
 
 #### 1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
 
-Here I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.  
+It was very difficult to tune the values for the filters in a robust manner. I believe it won't generalize well for other lighting and road conditions. Perhaps a voting algorithm between many filters would perform better and be more robust than a simple "or" between all filters.
+
+In addition, my heuristics for determining detection confidence will fail in case the lane dimensions change (very wide or narrow lanes). 
+To be more robust, the heuristics could be expanded, but this could hurt performance. Another option is to dynamically fit the expected lane widths according to a map or to a running average of previous observations.
+
