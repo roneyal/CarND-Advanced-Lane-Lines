@@ -57,24 +57,44 @@ def hls_threshold(image, channel='S', thresh=(0,255)):
     binary[(single_channel > thresh[0]) & (single_channel <= thresh[1])] = 1
     return binary
 
+def rgb_threshold(image, channel='R', thresh=(0,255)):
+    #Change color map
+    if channel == 'R':
+        channel_idx = 0
+    elif channel == 'G':
+        channel_idx = 1
+    else:
+        channel_idx = 2
+    single_channel = image[:,:,channel_idx]
+    binary = np.zeros_like(single_channel)
+    binary[(single_channel > thresh[0]) & (single_channel <= thresh[1])] = 1
+    return binary
 
 def apply_all_thresholds(image, plot = False):
     # Choose a Sobel kernel size
     ksize = 5  # Choose a larger odd number to smooth gradient measurements
     # Apply each of the thresholding functions
-    gradx = abs_sobel_thresh(image, orient='x', sobel_kernel=ksize, thresh=(200, 3000))
-    grady = abs_sobel_thresh(image, orient='y', sobel_kernel=ksize, thresh=(100, 3000))
+    gradx = abs_sobel_thresh(image, orient='x', sobel_kernel=ksize, thresh=(250, 3000))
+    grady = abs_sobel_thresh(image, orient='y', sobel_kernel=ksize, thresh=(500, 3000))
     # grady = np.zeros_like(grady)
-    mag_binary = mag_thresh(image, sobel_kernel=ksize, mag_thresh=(300, 1000))
-    dir_binary = dir_threshold(image, sobel_kernel=ksize, thresh=(np.pi * 0.15, np.pi * 0.30))
-    dir_binary[dir_threshold(image, sobel_kernel=ksize, thresh=(np.pi * 0.65, np.pi * 0.85)) == 1] = 1
-    dir_binary[dir_threshold(image, sobel_kernel=ksize, thresh=(-np.pi * 0.85, -np.pi * 0.65)) == 1] = 1
-    dir_binary[dir_threshold(image, sobel_kernel=ksize, thresh=(-np.pi * 0.30, -np.pi * 0.15)) == 1] = 1
+    mag_binary = mag_thresh(image, sobel_kernel=ksize, mag_thresh=(700, 1000))
+    dir_binary = np.zeros_like(mag_binary)
+    #dir_binary = dir_threshold(image, sobel_kernel=3, thresh=(np.pi * 0.25, np.pi * 0.3))
+    #dir_binary[dir_threshold(image, sobel_kernel=3, thresh=(np.pi * 0.75, np.pi * 0.8)) == 1] = 1
+    #dir_binary[dir_threshold(image, sobel_kernel=3, thresh=(-np.pi * 0.75, -np.pi * 0.65)) == 1] = 1
+    #dir_binary[dir_threshold(image, sobel_kernel=3, thresh=(-np.pi * 0.30, -np.pi * 0.15)) == 1] = 1
     s_binary = hls_threshold(image, 'S', thresh=(90, 255))
+    r_binary = rgb_threshold(image, 'R', thresh=(200,250))
     combined = np.zeros_like(dir_binary)
-    combined[((gradx == 1) & (grady == 1)) | ((mag_binary == 1) & (dir_binary == 1)) | (s_binary == 1)] = 1
+    combined[((gradx == 1) | (grady == 1)) |
+             ((mag_binary == 1)
+              #& (dir_binary == 1)
+              ) |
+             (r_binary == 1) |
+             (s_binary == 1)] = 1
+    combined[670:, :] = 0 #mask the hood of the vehicle
     combined_grad = np.zeros_like(dir_binary)
-    combined_grad[((gradx == 1) & (grady == 1))] = 1
+    combined_grad[((gradx == 1) | (grady == 1))] = 1
     combined_mag = np.zeros_like(dir_binary)
     combined_mag[((mag_binary == 1) & (dir_binary == 1))] = 1
 
@@ -95,8 +115,8 @@ def apply_all_thresholds(image, plot = False):
         subplots[2, 2].set_title('Combined X and Y Gradient', fontsize=10)
         subplots[0, 1].imshow(mag_binary, cmap='gray')
         subplots[0, 1].set_title('Thresholded Gradient Magnitude', fontsize=10)
-        subplots[1, 1].imshow(dir_binary, cmap='gray')
-        subplots[1, 1].set_title('Thresholded Gradient Direction', fontsize=10)
+        subplots[1, 1].imshow(r_binary, cmap='gray')
+        subplots[1, 1].set_title('Thresholded R channel', fontsize=10)
         subplots[2, 1].imshow(combined_mag, cmap='gray')
         subplots[2, 1].set_title('Combined Magnitude and Angle', fontsize=10)
         plt.subplots_adjust(left=0., right=1, top=0.9, bottom=0.)
@@ -106,6 +126,6 @@ def apply_all_thresholds(image, plot = False):
 
 if __name__ == '__main__':
 
-    image = mpimg.imread('test_images/test2.jpg')
+    image = mpimg.imread('input_images/1036.jpg')
 
     thresholded = apply_all_thresholds(image, True)

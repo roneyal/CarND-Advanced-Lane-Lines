@@ -26,7 +26,7 @@ class perspective_transform():
 if __name__ == '__main__':
 
 
-    img = mpimg.imread('test_images/straight_lines2.jpg')
+    img = mpimg.imread('input_images/22.jpg')
 
     perspective_transform = perspective_transform()
 
