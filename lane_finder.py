@@ -66,11 +66,6 @@ class video_flow():
 
         left_curverad, right_curverad, center_curverad = calc_radius(ploty, left_fitx, right_fitx)
 
-
-        if False:
-            # Generate x and y values for plotting
-            self.plot_polynomial_fits(left_fitx, ploty, right_fitx)
-
         # Create an image to draw the lines on
         warp_zero = np.zeros_like(warped).astype(np.uint8)
         color_warp = np.dstack((warp_zero, warp_zero, warp_zero))
@@ -93,10 +88,8 @@ class video_flow():
 
         result = cv2.putText(result, text, (40, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2)
         result = cv2.putText(result, text2, (40, 80), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2)
-        #result = cv2.putText(result, text3, (40, 120), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2)
-        #plt.imshow(result)
-        #plt.show()
-        scipy.misc.imsave('output_images/' + str(self.count) + '.jpg', result)
+
+        #scipy.misc.imsave('output_images/' + str(self.count) + '.jpg', result)
         self.count = self.count+1
 
         return result
@@ -151,9 +144,5 @@ def run_video():
 
 
 if __name__ == '__main__':
-
-    #img = mpimg.imread('test_images/straight_lines2.jpg')
-    #img = mpimg.imread('test_images/test1.jpg')
-    #handle_image(img)
 
     run_video()

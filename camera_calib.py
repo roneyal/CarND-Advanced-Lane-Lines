@@ -16,6 +16,7 @@ class camera_calib():
     def calibrate(self):
 
         if self.cameraMatrix is None:
+            print('calibrating camera...')
             # object points for a single image
             objp = np.zeros((self.nx * self.ny, 3), np.float32)
             objp[:, :2] = np.mgrid[0:self.nx, 0:self.ny].T.reshape(-1, 2)
@@ -29,7 +30,7 @@ class camera_calib():
 
                 img = mpimg.imread(fname)
                 # plt.imshow(img)
-                print(img.shape)
+                #print(img.shape)
 
                 gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
 
@@ -44,6 +45,7 @@ class camera_calib():
             img = cv2.imread(self.image_files[0])
             retval, self.cameraMatrix, self.distCoeffs, rvecs, tvecs = cv2.calibrateCamera(object_points, img_points, img.shape[0:2],
                                                                                  None, None)
+            print('calibration done')
 
     def undistort(self, img, plot = False):
         undist = cv2.undistort(img, self.cameraMatrix, self.distCoeffs, None, self.cameraMatrix)
@@ -56,6 +58,7 @@ class camera_calib():
             ax2.set_title('Undistorted Image', fontsize=50)
             plt.subplots_adjust(left=0., right=1, top=0.9, bottom=0.)
 
+            plt.savefig('output_images/calib.png')
             plt.show()
 
         return undist
